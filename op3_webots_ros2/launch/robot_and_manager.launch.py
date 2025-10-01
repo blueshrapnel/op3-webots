@@ -46,6 +46,11 @@ def spawn_manager(context):
         }],
         # If you decide to isolate graphs later, match the controller's domain
         # additional_env={"ROS_DOMAIN_ID": "0"},
+
+        # Make sure we never respawn and we kill hard if needed
+        respawn=False,
+        sigterm_timeout='2.0',   # seconds to wait after SIGTERM
+        sigkill_timeout='2.0',   # then SIGKILL
     )]
 
 
