@@ -37,8 +37,6 @@
 #include "op3_online_walking_module/online_walking_module.h"
 #include "op3_tuning_module/tuning_module.h"
 #include "op3_walking_module_msgs/msg/walking_param.hpp"
-#include "op3_webots_ros2/op3_player_state.hpp"
-
 
 using namespace robotis_framework;
 using namespace dynamixel;
@@ -159,41 +157,56 @@ int main(int argc, char **argv)
   walking_param_pub_ = node->create_publisher<op3_walking_module_msgs::msg::WalkingParam>("/robotis/walking/set_params", 10);
   walking_command_pub_ = node->create_publisher<std_msgs::msg::String>("/robotis/walking/command", 10);
   
+  bool simulation = false;
   node->declare_parameter<bool>("simulation", false);
-  node->get_parameter("simulation", controller->gazebo_mode_);
+  node->get_parameter("simulation", simulation);
+  // using flag consistent with ROBOTIS-OP3.op3_manager package
+  controller->gazebo_mode_ = simulation;
 
-  RCLCPP_WARN(node->get_logger(), "SET TO SIMULATION MODE!");
+  if (simulation) {
+    RCLCPP_WARN(node->get_logger(), "Simulation Mode: ON");
+  } else {
+    RCLCPP_WARN(node->get_logger(), "Simulation Mode: OFF");
+  }
+
   std::string robot_name;
   node->declare_parameter<std::string>("simulation_robot_name", "");
   node->get_parameter("simulation_robot_name", robot_name);
   if (robot_name != "")
     controller->gazebo_robot_name_ = robot_name;
 
-  if (g_robot_file == "")
-  {
+  if (g_robot_file.empty())
+  {  
     RCLCPP_ERROR(node->get_logger(), "NO robot file path in the ROS parameters.");
     return -1;
   }
 
   // initialize robot
-  if (controller->initialize(g_robot_file, g_init_file) == false)
+  // in sim: pass empty init file so framework does not touch /dev/ttyUSB
+  const std::string init_for_mode = controller->gazebo_mode_ ? "" : g_init_file;
+  RCLCPP_INFO(node->get_logger(),
+            "Initializing with robot_file='%s', init_file='%s'",
+            g_robot_file.c_str(), init_for_mode.c_str());
+
+
+  if (controller->initialize(g_robot_file, init_for_mode) == false)
   {
     RCLCPP_ERROR(node->get_logger(), "ROBOTIS Controller Initialize Fail!");
     return -1;
   }
 
-  // load offset
-  if (g_offset_file != "")
+  // load offset but not in simulation mode
+  if (!controller->gazebo_mode_ && !g_offset_file.empty())
     controller->loadOffset(g_offset_file);
 
-  usleep(300 * 1000);
+  rclcpp::sleep_for(std::chrono::milliseconds(300));
 
   /* Add Sensor Module */
   // controller->addSensorModule((SensorModule*) OpenCRModule::getInstance());
 
   /* Add Motion Module */
   // controller->addMotionModule((MotionModule*) ActionModule::getInstance());
-  // controller->addMotionModule((MotionModule*) BaseModule::getInstance());
+  controller->addMotionModule((MotionModule*) BaseModule::getInstance());
   // controller->addMotionModule((MotionModule*) HeadControlModule::getInstance());
   controller->addMotionModule((MotionModule*) WalkingModule::getInstance());
   // controller->addMotionModule((MotionModule*) DirectControlModule::getInstance());
@@ -202,19 +215,20 @@ int main(int argc, char **argv)
 
   // start timer
   controller->startTimer();
-
-  usleep(100 * 1000);
+  rclcpp::sleep_for(std::chrono::milliseconds(100));
 
   // go to init pose
   std_msgs::msg::String init_msg;
   init_msg.data = "ini_pose";
 
-  // g_init_pose_pub->publish(init_msg);
-  // RCLCPP_INFO(node->get_logger(), "Go to init pose");
+  g_init_pose_pub->publish(init_msg);
+  RCLCPP_INFO(node->get_logger(), "Controller; Base Module [initial pose]");
+  rclcpp::sleep_for(std::chrono::milliseconds(100));
 
   controller->setCtrlModule("walking_module");
+  RCLCPP_INFO(node->get_logger(), "Controller: Walking Module");
+  rclcpp::sleep_for(std::chrono::milliseconds(100));
 
-  auto player_state = std::make_shared<PlayerState>(node);
 
   rclcpp::spin(node);
 

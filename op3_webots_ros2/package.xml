@@ -22,10 +22,10 @@
   <depend>robotis_framework_common</depend>
   <depend>robotis_device</depend>
   <depend>robotis_controller</depend>
-  <depend>robotis_math</depend>
   <depend>op3_kinematics_dynamics</depend>
   <depend>op3_balance_control</depend>
   <depend>open_cr_module</depend>
+  <depend>robotis_math</depend>
   <depend>op3_base_module</depend>
   <depend>op3_head_control_module</depend>
   <depend>op3_walking_module</depend>
@@ -35,6 +35,7 @@
   <depend>op3_tuning_module</depend>
   <depend>op3_tuning_module_msgs</depend>
   <depend>domain_bridge</depend>
+  <depend>service_msgs</depend>
   
   <exec_depend>op3_localization</exec_depend>
   
