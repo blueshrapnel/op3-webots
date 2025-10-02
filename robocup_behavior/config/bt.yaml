@@ -1,0 +1,12 @@
+robocup_behavior_bt:
+  ros__parameters:
+    action_name: "behavior_server"
+    tick_frequency: 100
+    groot2_port: 1667
+    ros_plugins_timeout: 1000
+
+    plugins:
+      - robocup_behavior/plugins
+
+    behavior_trees:
+      - robocup_behavior/behaviors

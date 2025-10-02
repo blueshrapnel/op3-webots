@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4" project_name="Project">
+    <include path="tests.xml"/>
+    <!-- Description of Node Models (used by Groot) -->
+    <TreeNodesModel>
+        <Action ID="Twist">
+            <input_port name="x" default="0.0"/>
+            <input_port name="y" default="0.0"/>
+            <input_port name="yaw" default="0.0"/>
+        </Action>
+    </TreeNodesModel>
+</root>
